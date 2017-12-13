@@ -3,9 +3,9 @@ const bcrypt = require("bcrypt");
 const uniqueValidator = require("mongoose-unique-validator");
 
 const ReferalSchema = mongoose.Schema({
-  user: ref: User
-  referral: { type: String},
-  //referralLink: { type: String, required: true }
+  user: { type: Schema.Types.ObjectId, ref: 'User' },
+  referal: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  referralLink: { type: String, required: true }
 });
 
 UserSchema.plugin(uniqueValidator);

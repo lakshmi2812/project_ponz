@@ -107,8 +107,8 @@ app.use(express.static(`${__dirname}/public`));
 //---------------------
 //**Local Strategy
 //---------------------
-passport.use(//{usernameField: 'email'}
-  new LocalStrategy(function(email, password, done) {
+passport.use(
+  new LocalStrategy({usernameField: 'email'}, function(email, password, done) {
     User.findOne({ email }, function(err, user) {
       if (err) return done(err);
       if (!user || !user.validPassword(password)) {
@@ -135,6 +135,7 @@ passport.deserializeUser(function(id, done) {
 // ----------------------------------------
 app.get("/", async (req, res) => {
   try {
+  	console.log(req.session.passport)
     if (req.session.passport && req.session.passport.user) {
       let currentUser = await User.findById(req.session.passport.user);
       res.render("welcome/index", {
