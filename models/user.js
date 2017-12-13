@@ -3,11 +3,12 @@ const bcrypt = require("bcrypt");
 const uniqueValidator = require("mongoose-unique-validator");
 
 const UserSchema = mongoose.Schema({
+  username: { type: String },
   email: { type: String, required: true, unique: true },
   passwordHash: { type: String, required: true },
-  displayName: { type: String },
-  referrals: [{ type: mongooseSchema.Types.ObjectId, ref: 'referal' }]
-  //referralLink: { type: String, required: true }
+  parent: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  children: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  points: { type: Number }
 });
 
 UserSchema.plugin(uniqueValidator);

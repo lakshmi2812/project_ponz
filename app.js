@@ -13,8 +13,6 @@ var app = express();
 // Local
 app.locals.appName = "Ponzi-Time";
 
-
-
 // ----------------------------------------
 // Logging
 // ----------------------------------------
@@ -72,8 +70,6 @@ app.use(
   })
 );
 
-
-
 // ----------------------------------------
 // Passport
 // ----------------------------------------
@@ -82,7 +78,6 @@ const LocalStrategy = require("passport-local").Strategy;
 
 app.use(passport.initialize());
 app.use(passport.session());
-
 
 // ----------------------------------------
 //middleware to connect to MongoDB via mongoose in your `app.js`
@@ -97,18 +92,20 @@ app.use((req, res, next) => {
   }
 });
 
-
 // ----------------------------------------
 // Public
 // ----------------------------------------
 app.use(express.static(`${__dirname}/public`));
 
-
 //---------------------
 //**Local Strategy
 //---------------------
 passport.use(
-  new LocalStrategy({usernameField: 'email'}, function(email, password, done) {
+  new LocalStrategy({ usernameField: "email" }, function(
+    email,
+    password,
+    done
+  ) {
     User.findOne({ email }, function(err, user) {
       if (err) return done(err);
       if (!user || !user.validPassword(password)) {
@@ -120,7 +117,6 @@ passport.use(
 );
 
 passport.serializeUser(function(user, done) {
-
   done(null, user.id);
 });
 
@@ -135,12 +131,10 @@ passport.deserializeUser(function(id, done) {
 // ----------------------------------------
 app.get("/", async (req, res) => {
   try {
-  	console.log(req.session.passport)
+    console.log(req.session.passport);
     if (req.session.passport && req.session.passport.user) {
-      let currentUser = await User.findById(req.session.passport.user);
-      res.render("welcome/index", {
-        currentUser: currentUser
-      });
+      let username = await User.findById(req.session.passport.user);
+      res.render("welcome/index", { username });
     } else {
       res.redirect("/login");
     }
@@ -164,14 +158,12 @@ app.post(
     failureRedirect: "/login",
     failureFlash: true
   })
-
 );
 
 app.post("/register", async (req, res, next) => {
-  const { email, password } = req.body;
+  const { email, password, username } = req.body;
   //let referralLink = "";
-  const user = new User({ email, password}); // email: password: referralLink: ""
- // await User.update({ email: email }, { $set: { referralLink: user._id } });
+  const user = new User({ email, password, username });
   user.save(err => {
     res.redirect("/login");
     // req.login(user, function(err) {
@@ -192,7 +184,7 @@ app.get("/logout", function(req, res) {
 
 // catch 404 and forward to error handler
 //app.get("/:referralid", function(req,res){
-	//referalid = req.params.referralid
+//referalid = req.params.referralid
 /*User.findOne({ email }, function(err, user) {
       if (err) return done(err);
       if (!user || !user.validPassword(password)) {
@@ -200,7 +192,6 @@ app.get("/logout", function(req, res) {
       }
       return done(null, user);
     });*/
-
 
 //})
 // ----------------------------------------
