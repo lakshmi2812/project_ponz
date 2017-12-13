@@ -134,7 +134,7 @@ app.get("/", async (req, res) => {
     console.log(req.session.passport);
     if (req.session.passport && req.session.passport.user) {
       let currentUser = await User.findById(req.session.passport.user);
-      let link = currentUser._id
+      let link = currentUser._id;
       res.render("welcome/index", { currentUser, link });
     } else {
       res.redirect("/login");
@@ -152,15 +152,32 @@ app.get("/register", (req, res) => {
   res.render("register");
 });
 
-
 app.get("/referredby/:id", (req, res) => {
- 
-  	  let referrer = req.params.id 
-  	  console.log(referrer)
-      res.redirect("/register/id");
+  let referrer = req.params.id;
+  console.log(referrer);
+  res.redirect("/register/:id");
 });
 
+app.get("/register/:id", (req, res) => {
+  res.render("register");
+});
 
+app.post("/register/:id", async (req, res, next) => {
+  let id = req.params.id;
+  let parent = await User.findById(id);
+  const { email, password, username } = req.body;
+  //let referralLink = "";
+  const user = new User({ email, password, username, parent: id });
+  user.save(err => {
+    res.redirect("/login");
+    // req.login(user, function(err) {
+    //   if (err) {
+    //     return next(err);
+    //   }
+    //   return res.redirect("/");
+    // });
+  });
+});
 
 app.post(
   "/login",
