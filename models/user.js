@@ -6,7 +6,7 @@ const UserSchema = mongoose.Schema({
   email: { type: String, required: true, unique: true },
   passwordHash: { type: String, required: false },
   displayName: { type: String, required: true },
-  referrals: [{ type: Schema.Types.ObjectId, ref: "User" }],
+  referrals: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   referralLink: { type: String, required: true }
 });
 

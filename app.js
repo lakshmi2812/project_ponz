@@ -1,49 +1,231 @@
 var express = require("express");
 var path = require("path");
 var favicon = require("serve-favicon");
+const User = require("./models/User");
 var logger = require("morgan");
-var cookieParser = require("cookie-parser");
-var bodyParser = require("body-parser");
+
+const expressSession = require("express-session");
+
+const flash = require("express-flash");
 
 var app = express();
 
-// view engine setup
-app.set("views", path.join(__dirname, "views"));
-app.set("view engine", "hbs");
 
+
+// Local
+app.locals.appName = "Passport Scrapbook";
+
+// ----------------------------------------
+// Passport
+// ----------------------------------------
+const passport = require("passport");
+const LocalStrategy = require("passport-local").Strategy;
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+
+
+
+
+// ----------------------------------------
+// Logging
+// ----------------------------------------
+const morgan = require("morgan");
+const morganToolkit = require("morgan-toolkit")(morgan, {
+  req: ["cookies" /*, 'signedCookies' */]
+});
+
+app.use(morganToolkit());
+
+
+
+
+// ----------------------------------------
+// Template Engine
+// ----------------------------------------
+const expressHandlebars = require("express-handlebars");
+const helpers = require("./helpers");
+
+const hbs = expressHandlebars.create({
+  helpers: helpers,
+  partialsDir: "views/",
+  defaultLayout: "application"
+});
+
+app.engine("handlebars", hbs.engine);
+app.set("view engine", "handlebars");
+
+
+
+// ----------------------------------------
+// Flash Messages
+// ----------------------------------------
+const flashMessages = require("express-flash-messages");
+app.use(flashMessages());
+
+// ----------------------------------------
+// Body Parser
+// ----------------------------------------
+const bodyParser = require("body-parser");
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
+// ----------------------------------------
+// Sessions/Cookies
+// ----------------------------------------
+const cookieParser = require("cookie-parser");
+
+app.use(cookieParser());
+
+
+
+
+
+
+// ----------------------------------------
+// Express Session
+// ----------------------------------------
+app.use(flash());
+app.use(
+  expressSession({
+    secret: process.env.secret || "keyboard cat",
+    saveUninitialized: false,
+    resave: false
+  })
+);
+
+
+
+
+// ----------------------------------------
+//middleware to connect to MongoDB via mongoose in your `app.js`
+// ----------------------------------------
+const mongoose = require("mongoose");
+mongoose.connect("mongodb://localhost/assignment_ponz_scheme");
+app.use((req, res, next) => {
+  if (mongoose.connection.readyState) {
+    next();
+  } else {
+    require("./mongo")().then(() => next());
+  }
+});
+
+//---------------------
+//**Local Strategy
+//---------------------
+passport.use(
+  new LocalStrategy(function(email, password, done) {
+    User.findOne({ email }, function(err, user) {
+      if (err) return done(err);
+      if (!user || !user.validPassword(password)) {
+        return done(null, false, { message: "Invalid email/password" });
+      }
+      return done(null, user);
+    });
+  })
+);
+
+passport.serializeUser(function(user, done) {
+  done(null, user.id);
+});
+
+passport.deserializeUser(function(id, done) {
+  User.findById(id, function(err, user) {
+    done(err, user);
+  });
+});
+
+// ----------------------------------------
+//Routes
+// ----------------------------------------
+app.get("/", async (req, res) => {
+  try {
+    if (req.session.passport && req.session.passport.user) {
+      let currentUser = await User.findById(req.session.passport.user);
+      res.render("welcome/index", {
+        currentUser: currentUser
+      });
+    } else {
+      res.redirect("/login");
+    }
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+
+app.get("/login", (req, res) => {
+  res.render("login");
+});
+
+app.get("/register", (req, res) => {
+  res.render("register");
+});
+
+app.post(
+  "/login",
+  passport.authenticate("local", {
+    successRedirect: "/",
+    failureRedirect: "/login",
+    failureFlash: true
+  })
+);
+
+app.post("/register", (req, res, next) => {
+  const { email, password } = req.body;
+  const user = new User({ email, password });
+  user.save(err => {
+    res.redirect("/login");
+    // req.login(user, function(err) {
+    //   if (err) {
+    //     return next(err);
+    //   }
+    //   return res.redirect("/");
+    // });
+  });
+});
+
+app.get("/logout", function(req, res) {
+  req.logout();
+  res.redirect("login");
+});
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
-app.use(logger("dev"));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, "public")));
 
-app.use("/", index);
-app.use("/users", users);
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  var err = new Error("Not Found");
-  err.status = 404;
-  next(err);
+
+
+// ----------------------------------------
+// Server
+// ----------------------------------------
+const port = process.env.PORT || process.argv[2] || 3000;
+const host = "localhost";
+
+let args;
+process.env.NODE_ENV === "production" ? (args = [port]) : (args = [port, host]);
+
+args.push(() => {
+  console.log(`Listening: http://${host}:${port}\n`);
 });
+
+if (require.main === module) {
+  app.listen.apply(app, args);
+}
+
+
 
 // error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get("env") === "development" ? err : {};
+app.use((err, req, res, next) => {
+  if (res.headersSent) {
+    return next(err);
+  }
 
-  //Routes
-
-  // render the error page
-  res.status(err.status || 500);
-  res.render("error");
-});
-
-app.listen(3000, () => {
-  console.log("Server Listening at post 3000: ");
+  if (err.stack) {
+    err = err.stack;
+  }
+  res.status(500).render("errors/500", { error: err });
 });
 
 module.exports = app;
