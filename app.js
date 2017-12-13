@@ -11,16 +11,9 @@ const flash = require("express-flash");
 var app = express();
 
 // Local
-app.locals.appName = "Passport Scrapbook";
+app.locals.appName = "Ponzi-Time";
 
-// ----------------------------------------
-// Passport
-// ----------------------------------------
-const passport = require("passport");
-const LocalStrategy = require("passport-local").Strategy;
 
-app.use(passport.initialize());
-app.use(passport.session());
 
 // ----------------------------------------
 // Logging
@@ -79,6 +72,18 @@ app.use(
   })
 );
 
+
+
+// ----------------------------------------
+// Passport
+// ----------------------------------------
+const passport = require("passport");
+const LocalStrategy = require("passport-local").Strategy;
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+
 // ----------------------------------------
 //middleware to connect to MongoDB via mongoose in your `app.js`
 // ----------------------------------------
@@ -92,10 +97,17 @@ app.use((req, res, next) => {
   }
 });
 
+
+// ----------------------------------------
+// Public
+// ----------------------------------------
+app.use(express.static(`${__dirname}/public`));
+
+
 //---------------------
 //**Local Strategy
 //---------------------
-passport.use(
+passport.use(//{usernameField: 'email'}
   new LocalStrategy(function(email, password, done) {
     User.findOne({ email }, function(err, user) {
       if (err) return done(err);
@@ -108,6 +120,7 @@ passport.use(
 );
 
 passport.serializeUser(function(user, done) {
+
   done(null, user.id);
 });
 
@@ -150,13 +163,14 @@ app.post(
     failureRedirect: "/login",
     failureFlash: true
   })
+
 );
 
 app.post("/register", async (req, res, next) => {
   const { email, password } = req.body;
   //let referralLink = "";
-  const user = new User({ email, password, referralLink: "" }); // email: password: referralLink: ""
-  await User.update({ email: email }, { $set: { referralLink: _id } });
+  const user = new User({ email, password}); // email: password: referralLink: ""
+ // await User.update({ email: email }, { $set: { referralLink: user._id } });
   user.save(err => {
     res.redirect("/login");
     // req.login(user, function(err) {
@@ -176,7 +190,18 @@ app.get("/logout", function(req, res) {
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 
 // catch 404 and forward to error handler
+//app.get("/:referralid", function(req,res){
+	//referalid = req.params.referralid
+/*User.findOne({ email }, function(err, user) {
+      if (err) return done(err);
+      if (!user || !user.validPassword(password)) {
+        return done(null, false, { message: "Invalid email/password" });
+      }
+      return done(null, user);
+    });*/
 
+
+//})
 // ----------------------------------------
 // Server
 // ----------------------------------------

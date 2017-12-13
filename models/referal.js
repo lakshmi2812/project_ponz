@@ -2,11 +2,9 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const uniqueValidator = require("mongoose-unique-validator");
 
-const UserSchema = mongoose.Schema({
-  email: { type: String, required: true, unique: true },
-  passwordHash: { type: String, required: true },
-  displayName: { type: String },
-  referrals: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+const ReferalSchema = mongoose.Schema({
+  user: ref: User
+  referral: { type: String},
   //referralLink: { type: String, required: true }
 });
 
