@@ -154,8 +154,7 @@ app.get("/register", (req, res) => {
 
 app.get("/referredby/:id", (req, res) => {
   let referrer = req.params.id;
-  console.log(referrer);
-  res.redirect("/register/:id");
+  res.redirect(`/register/${referrer}`);
 });
 
 app.get("/register/:id", (req, res) => {
@@ -163,11 +162,13 @@ app.get("/register/:id", (req, res) => {
 });
 
 app.post("/register/:id", async (req, res, next) => {
-  let id = req.params.id;
+  let id = await (req.params.id).substring(3)
+  console.log(id)
+  console.log("$#$#$#$#$#$#$#$#$#$")
   let parent = await User.findById(id);
   const { email, password, username } = req.body;
   //let referralLink = "";
-  const user = new User({ email, password, username, parent: id });
+  const user = new User({ email, password, username, parent: parent._id });
   user.save(err => {
     res.redirect("/login");
     // req.login(user, function(err) {
