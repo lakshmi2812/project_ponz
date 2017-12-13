@@ -10,8 +10,6 @@ const flash = require("express-flash");
 
 var app = express();
 
-
-
 // Local
 app.locals.appName = "Passport Scrapbook";
 
@@ -24,10 +22,6 @@ const LocalStrategy = require("passport-local").Strategy;
 app.use(passport.initialize());
 app.use(passport.session());
 
-
-
-
-
 // ----------------------------------------
 // Logging
 // ----------------------------------------
@@ -37,9 +31,6 @@ const morganToolkit = require("morgan-toolkit")(morgan, {
 });
 
 app.use(morganToolkit());
-
-
-
 
 // ----------------------------------------
 // Template Engine
@@ -55,8 +46,6 @@ const hbs = expressHandlebars.create({
 
 app.engine("handlebars", hbs.engine);
 app.set("view engine", "handlebars");
-
-
 
 // ----------------------------------------
 // Flash Messages
@@ -78,11 +67,6 @@ const cookieParser = require("cookie-parser");
 
 app.use(cookieParser());
 
-
-
-
-
-
 // ----------------------------------------
 // Express Session
 // ----------------------------------------
@@ -94,9 +78,6 @@ app.use(
     resave: false
   })
 );
-
-
-
 
 // ----------------------------------------
 //middleware to connect to MongoDB via mongoose in your `app.js`
@@ -154,7 +135,6 @@ app.get("/", async (req, res) => {
   }
 });
 
-
 app.get("/login", (req, res) => {
   res.render("login");
 });
@@ -172,9 +152,11 @@ app.post(
   })
 );
 
-app.post("/register", (req, res, next) => {
+app.post("/register", async (req, res, next) => {
   const { email, password } = req.body;
-  const user = new User({ email, password });
+  //let referralLink = "";
+  const user = new User({ email, password, referralLink: "" }); // email: password: referralLink: ""
+  await User.update({ email: email }, { $set: { referralLink: _id } });
   user.save(err => {
     res.redirect("/login");
     // req.login(user, function(err) {
@@ -193,9 +175,7 @@ app.get("/logout", function(req, res) {
 // uncomment after placing your favicon in /public
 //app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 
-
 // catch 404 and forward to error handler
-
 
 // ----------------------------------------
 // Server
@@ -213,8 +193,6 @@ args.push(() => {
 if (require.main === module) {
   app.listen.apply(app, args);
 }
-
-
 
 // error handler
 app.use((err, req, res, next) => {

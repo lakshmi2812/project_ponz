@@ -22,4 +22,3 @@ require("./mongo")().then(() => {
   // a query
   repl.context.lg = data => console.log(data);
 });
-
