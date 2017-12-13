@@ -133,8 +133,9 @@ app.get("/", async (req, res) => {
   try {
     console.log(req.session.passport);
     if (req.session.passport && req.session.passport.user) {
-      let username = await User.findById(req.session.passport.user);
-      res.render("welcome/index", { username });
+      let currentUser = await User.findById(req.session.passport.user);
+      let link = currentUser._id
+      res.render("welcome/index", { currentUser, link });
     } else {
       res.redirect("/login");
     }
@@ -150,6 +151,16 @@ app.get("/login", (req, res) => {
 app.get("/register", (req, res) => {
   res.render("register");
 });
+
+
+app.get("/referredby/:id", (req, res) => {
+ 
+  	  let referrer = req.params.id 
+  	  console.log(referrer)
+      res.redirect("/register/id");
+});
+
+
 
 app.post(
   "/login",
