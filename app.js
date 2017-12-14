@@ -134,6 +134,7 @@ app.get("/", async (req, res) => {
     console.log(req.session.passport);
     if (req.session.passport && req.session.passport.user) {
       let currentUser = await User.findById(req.session.passport.user);
+      console.log("currentUser: ", currentUser);
       let link = currentUser._id;
       res.render("welcome/index", { currentUser, link });
     } else {
@@ -155,38 +156,38 @@ app.get("/register", (req, res) => {
 let referrer = "";
 app.get("/referredby/:id", (req, res) => {
   referrer = req.params.id;
-  res.redirect(`/register/${referrer}`);
+  res.redirect("/register");
 });
 
-app.get("/register/:id", (req, res) => {
-  res.render("register");
-});
+// app.get("/register/:id", (req, res) => {
+//   res.render("register");
+// });
 
-app.post("/register/:id", async (req, res, next) => {
-  let id = await referrer.substring(3);
-  console.log(id);
-  console.log("$#$#$#$#$#$#$#$#$#$");
-  let parent = await User.findById(id);
-  console.log("Parent document:", parent);
-  const { email, password, username } = req.body;
-  //let referralLink = "";
-  const user = new User({
-    email,
-    password,
-    username,
-    parent: parent._id,
-    points: 1
-  });
-  user.save(err => {
-    res.redirect("/login");
-    // req.login(user, function(err) {
-    //   if (err) {
-    //     return next(err);
-    //   }
-    //   return res.redirect("/");
-    // });
-  });
-});
+// app.post("/register/:id", async (req, res, next) => {
+//   let id = await referrer.substring(3);
+//   console.log(id);
+//   console.log("$#$#$#$#$#$#$#$#$#$");
+//   let parent = await User.findById(id);
+//   console.log("Parent document:", parent);
+//   const { email, password, username } = req.body;
+//   //let referralLink = "";
+//   const user = new User({
+//     email,
+//     password,
+//     username,
+//     parent: parent._id,
+//     points: 1
+//   });
+//   user.save(err => {
+//     res.redirect("/login");
+//     // req.login(user, function(err) {
+//     //   if (err) {
+//     //     return next(err);
+//     //   }
+//     //   return res.redirect("/");
+//     // });
+//   });
+// });
 
 app.post(
   "/login",
@@ -199,7 +200,7 @@ app.post(
 
 app.post("/register", async (req, res, next) => {
   if (referrer.length > 0) {
-    let id = await referrer.substring(3);
+    let id = referrer.substring(3);
     const { email, password, username } = req.body;
     id = Number(id);
     console.log(id);
@@ -223,7 +224,6 @@ app.post("/register", async (req, res, next) => {
     const { email, password, username } = req.body;
     const user = new User({ email, password, username });
     user.save(err => {
-      referrer = "";
       res.redirect("/login");
       // req.login(user, function(err) {
       //   if (err) {
