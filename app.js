@@ -3,6 +3,7 @@ var path = require("path");
 var favicon = require("serve-favicon");
 const User = require("./models/User");
 var logger = require("morgan");
+var assignPoints = require("./ponz_points");
 
 const expressSession = require("express-session");
 
@@ -136,7 +137,9 @@ app.get("/", async (req, res) => {
       let currentUser = await User.findById(req.session.passport.user);
       console.log("currentUser: ", currentUser);
       let link = currentUser._id;
-      res.render("welcome/index", { currentUser, link });
+      let points = currentUser.points;
+      console.log("Your ponz points: ", points);
+      res.render("welcome/index", { currentUser, link, points });
     } else {
       res.redirect("/login");
     }
@@ -154,7 +157,7 @@ app.get("/register", (req, res) => {
 });
 
 app.get("/referredby/:id", (req, res) => {
-  res.redirect("/register/:id");
+  res.redirect("/register/" + req.params.id);
 });
 
 app.get("/register/:id", (req, res) => {
@@ -163,20 +166,24 @@ app.get("/register/:id", (req, res) => {
 });
 
 app.post("/register/:id", async (req, res, next) => {
-  console.log("Parent document:", parent);
-  const { email, password, username, referrer } = req.body;
-  let parent = await User.findById(referrer);
-  console.log("Parent: ", parent);
-  const user = new User({
-    email,
-    password,
-    username,
-    parent: parent._id,
-    points: 1
-  });
-  user.save(err => {
-    res.redirect("/login");
-  });
+  try {
+    console.log("Parent document:", parent);
+    const { email, password, username, referrer } = req.body;
+    //let parent = await User.findById(referrer);
+    console.log("Parent: ", parent);
+    const user = new User({
+      email,
+      password,
+      username,
+      parent: referrer
+    });
+    await assignPoints(user);
+    user.save(err => {
+      res.redirect("/login");
+    });
+  } catch (err) {
+    console.log(err);
+  }
 });
 
 app.post(
@@ -194,12 +201,6 @@ app.post("/register", async (req, res, next) => {
   console.log("email:", email, " password:", password, "username: ", username);
   user.save(err => {
     res.redirect("/login");
-    // req.login(user, function(err) {
-    //   if (err) {
-    //     return next(err);
-    //   }
-    //   return res.redirect("/");
-    // });
   });
 });
 
