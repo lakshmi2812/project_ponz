@@ -152,8 +152,9 @@ app.get("/register", (req, res) => {
   res.render("register");
 });
 
+let referrer = "";
 app.get("/referredby/:id", (req, res) => {
-  let referrer = req.params.id;
+  referrer = req.params.id;
   res.redirect(`/register/${referrer}`);
 });
 
@@ -162,13 +163,20 @@ app.get("/register/:id", (req, res) => {
 });
 
 app.post("/register/:id", async (req, res, next) => {
-  let id = await (req.params.id).substring(3)
-  console.log(id)
-  console.log("$#$#$#$#$#$#$#$#$#$")
+  let id = await referrer.substring(3);
+  console.log(id);
+  console.log("$#$#$#$#$#$#$#$#$#$");
   let parent = await User.findById(id);
+  console.log("Parent document:", parent);
   const { email, password, username } = req.body;
   //let referralLink = "";
-  const user = new User({ email, password, username, parent: parent._id });
+  const user = new User({
+    email,
+    password,
+    username,
+    parent: parent._id,
+    points: 1
+  });
   user.save(err => {
     res.redirect("/login");
     // req.login(user, function(err) {
@@ -190,18 +198,41 @@ app.post(
 );
 
 app.post("/register", async (req, res, next) => {
-  const { email, password, username } = req.body;
-  //let referralLink = "";
-  const user = new User({ email, password, username });
-  user.save(err => {
-    res.redirect("/login");
-    // req.login(user, function(err) {
-    //   if (err) {
-    //     return next(err);
-    //   }
-    //   return res.redirect("/");
-    // });
-  });
+  if (referrer.length > 0) {
+    let id = await referrer.substring(3);
+    const { email, password, username } = req.body;
+    id = Number(id);
+    console.log(id);
+    console.log("$#$#$#$#$#$#$#$#$#$");
+    let parent = await User.findById(id);
+    console.log("Parent document:", parent);
+    //let referralLink = "";
+    const user = new User({ email, password, username, parent: parent._id });
+    user.save(err => {
+      referrer = "";
+      res.redirect("/login");
+      // req.login(user, function(err) {
+      //   if (err) {
+      //     return next(err);
+      //   }
+      //   return res.redirect("/");
+      // });
+    });
+  } else {
+    //let referralLink = "";
+    const { email, password, username } = req.body;
+    const user = new User({ email, password, username });
+    user.save(err => {
+      referrer = "";
+      res.redirect("/login");
+      // req.login(user, function(err) {
+      //   if (err) {
+      //     return next(err);
+      //   }
+      //   return res.redirect("/");
+      // });
+    });
+  }
 });
 
 app.get("/logout", function(req, res) {
