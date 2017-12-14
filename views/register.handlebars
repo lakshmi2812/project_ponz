@@ -4,6 +4,7 @@
     <div class="panel-body">
 
       <form action="/register" method="post">
+        <input type="hidden" name="referrer" value="{{referrer}}">
         <div class="form-group">
           <input type="text" name="username" value="" placeholder="username" class="form-control">
         </div>
