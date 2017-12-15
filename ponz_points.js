@@ -1,15 +1,20 @@
+const User = require("./models/User");
 let assignPoints = async function(user) {
-  let points = 40;
+  let _points = 40;
   let level = 1;
+  let distance = 1;
   let referrer = await User.findById(user.parent);
-  while (referrer !== undefined) {
+  while (referrer !== null) {
     if (level === 1) {
-      referrer.points = points;
+      await User.update({ _id: referrer._id }, { $inc: { points: 40 } });
     } else if (level > 1 && level <= 5) {
-      referrer.points = Math.floor(points / 2);
-      points = points / 2;
+      await User.update(
+        { _id: referrer._id },
+        { $inc: { points: Math.floor(_points / 2) } }
+      );
+      _points = _points / 2;
     } else {
-      referrer.points = 1;
+      await User.update({ _id: referrer._id }, { $inc: { points: 1 } });
     }
     level++;
     user = referrer;

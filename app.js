@@ -165,26 +165,26 @@ app.get("/register/:id", (req, res) => {
   res.render("register", { referrer });
 });
 
-app.post("/register/:id", async (req, res, next) => {
-  try {
-    console.log("Parent document:", parent);
-    const { email, password, username, referrer } = req.body;
-    //let parent = await User.findById(referrer);
-    console.log("Parent: ", parent);
-    const user = new User({
-      email,
-      password,
-      username,
-      parent: referrer
-    });
-    await assignPoints(user);
-    user.save(err => {
-      res.redirect("/login");
-    });
-  } catch (err) {
-    console.log(err);
-  }
-});
+// app.post("/register/:id", async (req, res, next) => {
+//   try {
+//     console.log("Parent document:", parent);
+//     const { email, password, username, referrer } = req.body;
+//     //let parent = await User.findById(referrer);
+//     console.log("Parent: ", parent);
+//     const user = new User({
+//       email,
+//       password,
+//       username,
+//       parent: referrer
+//     });
+//     await assignPoints(user);
+//     user.save(err => {
+//       res.redirect("/login");
+//     });
+//   } catch (err) {
+//     console.log(err);
+//   }
+// });
 
 app.post(
   "/login",
@@ -196,12 +196,56 @@ app.post(
 );
 
 app.post("/register", async (req, res, next) => {
-  const { email, password, username } = req.body;
-  const user = await new User({ email, password, username });
-  console.log("email:", email, " password:", password, "username: ", username);
-  user.save(err => {
-    res.redirect("/login");
-  });
+  try {
+    if (req.body.referrer) {
+      const { email, password, username, referrer } = req.body;
+      //let parent = await User.findById(referrer);
+      console.log("Parent: ", referrer);
+      const user = await new User({
+        email,
+        password,
+        username,
+        parent: referrer,
+        points: 0,
+        children: { 1: [] }
+      });
+      await assignPoints(user);
+      console.log(
+        "email:",
+        email,
+        " password:",
+        password,
+        "username: ",
+        username
+      );
+      user.save(err => {
+        res.redirect("/login");
+      });
+    } else {
+      const { email, password, username } = req.body;
+      const user = await new User({
+        email,
+        password,
+        username,
+        parent: undefined,
+        points: 0,
+        children: { 1: [] }
+      });
+      console.log(
+        "email:",
+        email,
+        " password:",
+        password,
+        "username: ",
+        username
+      );
+      user.save(err => {
+        res.redirect("/login");
+      });
+    }
+  } catch (err) {
+    console.log(err);
+  }
 });
 
 app.get("/logout", function(req, res) {

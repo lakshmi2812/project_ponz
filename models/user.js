@@ -7,7 +7,12 @@ const UserSchema = mongoose.Schema({
   email: { type: String, required: true, unique: true },
   passwordHash: { type: String, required: true },
   parent: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  children: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  children: {
+    type: {
+      distance: { type: Number },
+      _children: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }]
+    }
+  },
   points: { type: Number }
 });
 
